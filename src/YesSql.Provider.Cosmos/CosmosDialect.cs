@@ -95,21 +95,17 @@ namespace YesSql.Provider.Cosmos
             {
                 sqlBuilder.Trail(" OFFSET ");
                 sqlBuilder.Trail(offset);
-                sqlBuilder.Trail(" ROWS");
 
                 if (limit != null)
                 {
-                    sqlBuilder.Trail(" FETCH NEXT ");
+                    sqlBuilder.Trail(" LIMIT ");
                     sqlBuilder.Trail(limit);
-                    sqlBuilder.Trail(" ROWS ONLY");
                 }
             }
             else if (limit != null)
             {
-                // Insert LIMIT clause after the select with brackets for parameters
-                sqlBuilder.InsertSelector(" ");
-                sqlBuilder.InsertSelector("(" + limit + ")");
-                sqlBuilder.InsertSelector("TOP ");
+                sqlBuilder.Trail(" OFFSET 0 LIMIT ");
+                sqlBuilder.Trail(limit);
             }
         }
 
@@ -120,12 +116,12 @@ namespace YesSql.Provider.Cosmos
 
         public override string QuoteForColumnName(string columnName)
         {
-            return "[" + columnName + "]";
+            return columnName;
         }
 
         public override string QuoteForTableName(string tableName)
         {
-            return "[" + tableName + "]";
+            return tableName;
         }
 
         public override void Concat(StringBuilder builder, params Action<StringBuilder>[] generators)

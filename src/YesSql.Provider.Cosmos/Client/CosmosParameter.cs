@@ -8,6 +8,16 @@ namespace YesSql.Provider.Cosmos.Client
 {
     public class CosmosParameter : DbParameter
     {
+        public CosmosParameter()
+        {
+        }
+
+        public CosmosParameter(string parameterName, object value)
+        {
+            ParameterName = parameterName;
+            Value = value;
+        }
+
         public override int Size { get; set; }
         public override DbType DbType { get; set; }
         public override ParameterDirection Direction { get; set; }
@@ -20,6 +30,15 @@ namespace YesSql.Provider.Cosmos.Client
         public override void ResetDbType()
         {
             DbType = default(DbType);
+        }
+
+        internal void ResetParent()
+        {
+        }
+
+        internal object CompareExchangeParent(CosmosParameterCollection collection, object value)
+        {
+            return collection;
         }
     }
 }

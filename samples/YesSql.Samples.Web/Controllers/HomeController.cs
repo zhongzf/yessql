@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using YesSql.Services;
 using YesSql.Samples.Web.Models;
 using System.Threading.Tasks;
+using System;
 
 namespace YesSql.Samples.Web.Controllers
 {
@@ -24,6 +25,27 @@ namespace YesSql.Samples.Web.Controllers
             }
 
             return View(post);
+        }
+
+        [Route("create")]
+        public IActionResult Create()
+        {
+            // creating a blog post
+            var post = new BlogPost
+            {
+                Title = "Hello YesSql",
+                Author = "Bill",
+                Content = "Hello",
+                PublishedUtc = DateTime.UtcNow,
+                Tags = new[] { "Hello", "YesSql" }
+            };
+
+            // saving the post to the database
+            using (var session = _store.CreateSession())
+            {
+                session.Save(post);
+            }
+            return Content(post.Id.ToString());
         }
     }
 }

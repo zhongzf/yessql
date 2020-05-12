@@ -8,7 +8,7 @@ namespace YesSql.Provider.Cosmos
 {
     public static class CosmosDbProviderOptionsExtensions
     {
-        public static IConfiguration RegisterSqlServer(this IConfiguration configuration)
+        public static IConfiguration RegisterCosmos(this IConfiguration configuration)
         {
             SqlDialectFactory.SqlDialects["cosmosconnection"] = new CosmosDialect();
             CommandInterpreterFactory.CommandInterpreters["cosmosconnection"] = d => new CosmosCommandInterpreter(d);
@@ -30,7 +30,7 @@ namespace YesSql.Provider.Cosmos
                 throw new ArgumentException(nameof(connectionString));
             }
 
-            RegisterSqlServer(configuration);
+            RegisterCosmos(configuration);
 
             configuration.ConnectionFactory = new DbConnectionFactory<CosmosConnection>(connectionString);
 

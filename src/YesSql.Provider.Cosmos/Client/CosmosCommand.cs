@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Text;
+using YesSql.Provider.Cosmos.Helpers;
 
 namespace YesSql.Provider.Cosmos.Client
 {
@@ -20,6 +22,8 @@ namespace YesSql.Provider.Cosmos.Client
 
         protected override DbTransaction DbTransaction { get; set; }
 
+        public CosmosExecutor CosmosExecutor { get; set; }
+
         public override void Cancel()
         {
         }
@@ -36,17 +40,34 @@ namespace YesSql.Provider.Cosmos.Client
 
         public override int ExecuteNonQuery()
         {
-            throw new NotImplementedException();
+            if(CommandText.StartsWith("alter", StringComparison.OrdinalIgnoreCase) || CommandText.StartsWith("create", StringComparison.OrdinalIgnoreCase))
+            {
+                // TODO: create table
+                return 1;
+            }
+            return 0;
         }
 
         public override object ExecuteScalar()
         {
-            throw new NotImplementedException();
+            var reader = ExecuteReader();
+            if (reader.Read())
+            {
+                try
+                {
+                    return reader.GetValue(0);
+                }
+                catch(Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+            return null;
         }
 
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
-            throw new NotImplementedException();
+            return new CosmosDataReader { FeedIteratorReader = new FeedIteratorReader { FeedIterator = CosmosExecutor.Query(this.CommandText) } };
         }
     }
 }

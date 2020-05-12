@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Text;
+using YesSql.Provider.Cosmos.Helpers;
 
 namespace YesSql.Provider.Cosmos.Client
 {
@@ -28,11 +30,27 @@ namespace YesSql.Provider.Cosmos.Client
             _database = databaseName;
         }
 
+        protected virtual string GetPartString(string connectionString, string name, int index)
+        {
+            var parts = connectionString.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
+            var part = parts.FirstOrDefault(p => p.StartsWith($"{name}=", StringComparison.OrdinalIgnoreCase));
+            if (part != null)
+            {
+                return part.Substring($"{name}=".Length);
+            }
+            else
+            {
+                return parts[index];
+            }
+        }
+
         private CosmosClient _client;
 
         public override void Open()
         {
             _client = new CosmosClient(ConnectionString);
+            var databaseName = GetPartString(ConnectionString, "DatabaseName", 2);
+            ChangeDatabase(databaseName);
             _state = ConnectionState.Open;
         }
 
@@ -50,7 +68,7 @@ namespace YesSql.Provider.Cosmos.Client
 
         protected override DbCommand CreateDbCommand()
         {
-            return new CosmosCommand { Connection = this };
+            return new CosmosCommand { Connection = this, CosmosExecutor = new CosmosExecutor { Client = _client, DatabaseId = Database } };
         }
     }
 }

@@ -14,6 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\YesSql.Core\YesSql.Core.csproj" />
+    <ProjectReference Include="..\..\src\YesSql.Provider.Cosmos\YesSql.Provider.Cosmos.csproj" />
     <ProjectReference Include="..\..\src\YesSql.Provider.SqlServer\YesSql.Provider.SqlServer.csproj" />
   </ItemGroup>
 
