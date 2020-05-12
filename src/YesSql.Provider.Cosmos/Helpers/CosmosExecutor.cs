@@ -22,6 +22,7 @@ namespace YesSql.Provider.Cosmos.Helpers
         public FeedIterator Query(string commandText)
         {
             var queryText = commandText.TrimEnd(';');
+            // TODO: SELECT Document.* FROM Document
             return Database.GetContainerQueryStreamIterator(queryText);
         }
 
