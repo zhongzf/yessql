@@ -26,10 +26,20 @@ namespace YesSql.Provider.Cosmos.Helpers
             return Database.GetContainerQueryStreamIterator(queryText);
         }
 
-        public async Task<object> Create(string containerId, object data)
+        public async Task<object> CreateAsync(string containerId, object data)
         {
-            Container container = await Database.CreateContainerIfNotExistsAsync(containerId, "Id");
+            Container container = await Database.CreateContainerIfNotExistsAsync(containerId, "/Id");
+            EnsureDefaultId(data);
             return await container.CreateItemAsync<object>(data);
+        }
+
+        private static void EnsureDefaultId(object data)
+        {
+            var dictionary = data as IDictionary<string, object>;
+            if (dictionary != null && !dictionary.ContainsKey("Id"))
+            {
+                dictionary.Add("Id", Guid.NewGuid().ToString());
+            }
         }
     }
 }

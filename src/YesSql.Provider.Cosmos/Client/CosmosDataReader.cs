@@ -41,7 +41,7 @@ namespace YesSql.Provider.Cosmos.Client
             }
         }
 
-        public override bool HasRows => throw new NotImplementedException();
+        public override bool HasRows => FeedIteratorReader.FeedIterator.HasMoreResults;
 
         public override bool IsClosed => false;
 

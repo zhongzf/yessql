@@ -17,12 +17,13 @@ namespace YesSql.Provider.Cosmos.Client
         public override UpdateRowSource UpdatedRowSource { get; set; }
         protected override DbConnection DbConnection { get; set; }
 
-        private DbParameterCollection _dbParameterCollection = new CosmosParameterCollection();
-        protected override DbParameterCollection DbParameterCollection => _dbParameterCollection;
+        protected override DbParameterCollection DbParameterCollection { get; } = new CosmosParameterCollection();
 
         protected override DbTransaction DbTransaction { get; set; }
 
         public CosmosExecutor CosmosExecutor { get; set; }
+
+        public CommandTextParser Parser { get; set; } = new CommandTextParser();
 
         public override void Cancel()
         {
@@ -40,10 +41,19 @@ namespace YesSql.Provider.Cosmos.Client
 
         public override int ExecuteNonQuery()
         {
-            if(CommandText.StartsWith("alter", StringComparison.OrdinalIgnoreCase) || CommandText.StartsWith("create", StringComparison.OrdinalIgnoreCase))
+            if(CommandText.StartsWith("alter ", StringComparison.OrdinalIgnoreCase) || CommandText.StartsWith("create ", StringComparison.OrdinalIgnoreCase))
             {
                 // TODO: create table
                 return 1;
+            }
+            else if(CommandText.StartsWith("insert into ", StringComparison.OrdinalIgnoreCase))
+            {
+                var tableName = Parser.ExtractInsertObject(CommandText, DbParameterCollection, out object data);
+                if(!string.IsNullOrEmpty(tableName) && data != null)
+                {
+                    CosmosExecutor.CreateAsync(tableName, data).GetAwaiter().GetResult();
+                    return 1;
+                }    
             }
             return 0;
         }
