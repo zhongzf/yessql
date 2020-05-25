@@ -172,6 +172,8 @@ namespace YesSql.Provider.Cosmos.Client
             }
             catch (Exception ex)
             {
+                Debug.WriteLine(FeedIteratorReader.CommandText);
+                Debug.WriteLine(FeedIteratorReader.QueryText);
                 Debug.WriteLine(ex);
             }
             return CurrentObject != null;

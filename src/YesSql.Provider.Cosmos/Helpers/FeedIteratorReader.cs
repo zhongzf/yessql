@@ -12,6 +12,9 @@ namespace YesSql.Provider.Cosmos.Helpers
     {
         public FeedIterator FeedIterator { get; set; }
 
+        public string CommandText { get; set; }
+        public string QueryText { get; set; }
+
         public async Task<object> ReadNext()
         {
             using (ResponseMessage response = await FeedIterator.ReadNextAsync())

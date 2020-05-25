@@ -27,18 +27,22 @@ namespace YesSql.Provider.Cosmos.Helpers
             }
         }
 
-        public FeedIterator Query(string commandText, DbParameterCollection parameters)
+        public FeedIterator Query(string tableName, string commandText, DbParameterCollection parameters, out string queryText)
         {
-            var queryText = new CommandConverter(commandText).Convert();
+            queryText = new CommandConverter(commandText).Convert();
             var queryDefinition = new QueryDefinition(queryText);
             if(parameters != null && parameters.Count > 0)
             {
                 foreach(DbParameter parameter in parameters)
                 {
-                    queryDefinition = queryDefinition.WithParameter(parameter.ParameterName, parameter.Value);
+                    var parameterName = parameter.ParameterName.StartsWith("@") ? parameter.ParameterName : "@" + parameter.ParameterName;
+                    var parameterValue = parameter.Value;
+                    queryDefinition = queryDefinition.WithParameter(parameterName, parameterValue);
                 }
             }
-            return Database.GetContainerQueryStreamIterator(queryDefinition);
+            var containerId = tableName;
+            Container container = Database.CreateContainerIfNotExistsAsync(containerId, PartitionKeyPath).GetAwaiter().GetResult();
+            return container.GetItemQueryStreamIterator(queryDefinition);
         }
 
         public async Task<object> CreateAsync(string containerId, object data)

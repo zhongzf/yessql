@@ -39,5 +39,17 @@ namespace YesSql.Provider.Cosmos.Helpers
             }
             return tableName;
         }
+
+        public string ExtractTableName(string commandText)
+        {
+            var tableName = string.Empty;
+            var regexTableName = new Regex("SELECT .* FROM ([\\w\\d]*)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            if (regexTableName.IsMatch(commandText))
+            {
+                var groups = regexTableName.Match(commandText).Groups;
+                tableName = groups[1].Value;
+            }
+            return tableName;
+        }
     }
 }
