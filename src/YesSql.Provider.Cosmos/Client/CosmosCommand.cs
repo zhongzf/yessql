@@ -51,7 +51,7 @@ namespace YesSql.Provider.Cosmos.Client
                 var tableName = Parser.ExtractInsertObject(CommandText, DbParameterCollection, out object data);
                 if(!string.IsNullOrEmpty(tableName) && data != null)
                 {
-                    CosmosExecutor.CreateAsync(tableName, data).GetAwaiter().GetResult();
+                    var result = CosmosExecutor.CreateAsync(tableName, data).GetAwaiter().GetResult();
                     return 1;
                 }    
             }
