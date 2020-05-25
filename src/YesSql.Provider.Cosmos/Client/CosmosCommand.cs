@@ -77,7 +77,7 @@ namespace YesSql.Provider.Cosmos.Client
 
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
-            return new CosmosDataReader { FeedIteratorReader = new FeedIteratorReader { FeedIterator = CosmosExecutor.Query(this.CommandText) } };
+            return new CosmosDataReader { FeedIteratorReader = new FeedIteratorReader { FeedIterator = CosmosExecutor.Query(this.CommandText, this.Parameters) } };
         }
     }
 }

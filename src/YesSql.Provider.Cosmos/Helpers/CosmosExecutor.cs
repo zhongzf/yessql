@@ -2,6 +2,7 @@ using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,11 +27,18 @@ namespace YesSql.Provider.Cosmos.Helpers
             }
         }
 
-        public FeedIterator Query(string commandText)
+        public FeedIterator Query(string commandText, DbParameterCollection parameters)
         {
-            var queryText = commandText.TrimEnd(';');
-            // TODO: SELECT Document.* FROM Document
-            return Database.GetContainerQueryStreamIterator(queryText);
+            var queryText = new CommandConverter(commandText).Convert();
+            var queryDefinition = new QueryDefinition(queryText);
+            if(parameters != null && parameters.Count > 0)
+            {
+                foreach(DbParameter parameter in parameters)
+                {
+                    queryDefinition = queryDefinition.WithParameter(parameter.ParameterName, parameter.Value);
+                }
+            }
+            return Database.GetContainerQueryStreamIterator(queryDefinition);
         }
 
         public async Task<object> CreateAsync(string containerId, object data)
