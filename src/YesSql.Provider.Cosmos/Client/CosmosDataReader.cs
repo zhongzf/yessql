@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,7 +11,13 @@ namespace YesSql.Provider.Cosmos.Client
 {
     public class CosmosDataReader : DbDataReader
     {
+        public const string DocumentsPropertyName = "Documents";
+
         public FeedIteratorReader FeedIteratorReader { get; set; }
+        
+        public object NextObject { get; set; }
+
+        public int CurrentIndex { get; set; }
 
         public object CurrentObject { get; set; }
 
@@ -168,7 +175,19 @@ namespace YesSql.Provider.Cosmos.Client
         {
             try
             {
-                CurrentObject = FeedIteratorReader.ReadNext().GetAwaiter().GetResult();
+                if(NextObject == null)
+                {
+                    NextObject = FeedIteratorReader.ReadNext().GetAwaiter().GetResult();
+                }
+                if(NextObject is JObject)
+                {
+                    var documents = (NextObject as JObject).GetValue(DocumentsPropertyName) as JArray;
+                    if(documents != null && documents.Count > 0 && CurrentIndex < documents.Count)
+                    {
+                        CurrentObject = documents[CurrentIndex];
+                        CurrentIndex++;
+                    }
+                }
             }
             catch (Exception ex)
             {
