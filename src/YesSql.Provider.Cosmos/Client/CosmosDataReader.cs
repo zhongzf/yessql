@@ -27,7 +27,6 @@ namespace YesSql.Provider.Cosmos.Client
 
         public object GetObjectValue(int ordinal)
         {
-            // TODO:
             if(CurrentObject != null && CurrentObject is JObject)
             {
                 var data = CurrentObject as JObject;
@@ -39,7 +38,12 @@ namespace YesSql.Provider.Cosmos.Client
 
         public object GetObjectValue(string name)
         {
-            // TODO:
+            if (CurrentObject != null && CurrentObject is JObject)
+            {
+                var data = CurrentObject as JObject;
+                var jObjectReader = new JObjectReader(data);
+                return jObjectReader.GetValue(name);
+            }
             return null;
         }
 
@@ -49,8 +53,13 @@ namespace YesSql.Provider.Cosmos.Client
         {
             get
             {
-                // TODO:
-                return 1;
+                if (CurrentObject != null && CurrentObject is JObject)
+                {
+                    var data = CurrentObject as JObject;
+                    var jObjectReader = new JObjectReader(data);
+                    return jObjectReader.GetProperties().Length;
+                }
+                return 0;
             }
         }
 
@@ -102,7 +111,12 @@ namespace YesSql.Provider.Cosmos.Client
 
         public override Type GetFieldType(int ordinal)
         {
-            // TODO:
+            if (CurrentObject != null && CurrentObject is JObject)
+            {
+                var data = CurrentObject as JObject;
+                var jObjectReader = new JObjectReader(data);
+                return jObjectReader.GetPropertyType(ordinal);
+            }
             return typeof(string);
         }
 
@@ -168,13 +182,24 @@ namespace YesSql.Provider.Cosmos.Client
 
         public override string GetName(int ordinal)
         {
-            // TODO:
+            if (CurrentObject != null && CurrentObject is JObject)
+            {
+                var data = CurrentObject as JObject;
+                var jObjectReader = new JObjectReader(data);
+                return jObjectReader.GetPropertyName(ordinal);
+            }
             return ordinal.ToString();
         }
 
         public override int GetOrdinal(string name)
         {
-            throw new NotImplementedException();
+            if (CurrentObject != null && CurrentObject is JObject)
+            {
+                var data = CurrentObject as JObject;
+                var jObjectReader = new JObjectReader(data);
+                return jObjectReader.GetPropertyIndex(name);
+            }
+            return 0;
         }
 
         public override bool Read()
