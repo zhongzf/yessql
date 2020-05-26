@@ -55,6 +55,15 @@ namespace YesSql.Provider.Cosmos.Client
                     return 1;
                 }    
             }
+            else if(CommandText.StartsWith("update ", StringComparison.OrdinalIgnoreCase))
+            {
+                var tableName = Parser.ExtractUpdateObject(CommandText, DbParameterCollection, out object data, out string queryText);
+                if(!string.IsNullOrEmpty(tableName) && data != null)
+                {
+                    var result = CosmosExecutor.UpdateAsync(tableName, data, queryText).GetAwaiter().GetResult();
+                    return (int)result;
+                }
+            }
             return 0;
         }
 

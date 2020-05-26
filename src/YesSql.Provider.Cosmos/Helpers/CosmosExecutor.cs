@@ -11,6 +11,8 @@ namespace YesSql.Provider.Cosmos.Helpers
 {
     public class CosmosExecutor
     {
+        public const string ParameterIdentifying = "@";
+
         public const string PartitionKey = "__partition__";
         public const string PartitionKeyPath = "/" + PartitionKey;
         public const string DefaultPartitionKey = "0";
@@ -25,31 +27,6 @@ namespace YesSql.Provider.Cosmos.Helpers
             {
                 return Client.CreateDatabaseIfNotExistsAsync(DatabaseId).GetAwaiter().GetResult();
             }
-        }
-
-        public FeedIterator Query(string tableName, string commandText, DbParameterCollection parameters, out string queryText)
-        {
-            queryText = new CommandConverter(commandText).Convert();
-            var queryDefinition = new QueryDefinition(queryText);
-            if(parameters != null && parameters.Count > 0)
-            {
-                foreach(DbParameter parameter in parameters)
-                {
-                    var parameterName = parameter.ParameterName.StartsWith("@") ? parameter.ParameterName : "@" + parameter.ParameterName;
-                    var parameterValue = parameter.Value;
-                    queryDefinition = queryDefinition.WithParameter(parameterName, parameterValue);
-                }
-            }
-            var containerId = tableName;
-            Container container = Database.CreateContainerIfNotExistsAsync(containerId, PartitionKeyPath).GetAwaiter().GetResult();
-            return container.GetItemQueryStreamIterator(queryDefinition);
-        }
-
-        public async Task<object> CreateAsync(string containerId, object data)
-        {
-            Container container = await Database.CreateContainerIfNotExistsAsync(containerId, PartitionKeyPath);
-            EnsureDefaultId(data);
-            return await container.CreateItemStreamAsync(ConvertToStream(data), new PartitionKey(DefaultPartitionKey));
         }
 
         public Stream ConvertToStream(object data)
@@ -73,6 +50,40 @@ namespace YesSql.Provider.Cosmos.Helpers
                     dictionary.Add(PartitionKey, DefaultPartitionKey);
                 }
             }
+        }
+
+        public FeedIterator Query(string tableName, string commandText, DbParameterCollection parameters, out string queryText)
+        {
+            queryText = new CommandConverter(commandText).Convert();
+            var queryDefinition = new QueryDefinition(queryText);
+            if(parameters != null && parameters.Count > 0)
+            {
+                foreach(DbParameter parameter in parameters)
+                {
+                    var parameterName = parameter.ParameterName.StartsWith(ParameterIdentifying) ? parameter.ParameterName : ParameterIdentifying + parameter.ParameterName;
+                    var parameterValue = parameter.Value;
+                    queryDefinition = queryDefinition.WithParameter(parameterName, parameterValue);
+                }
+            }
+            var containerId = tableName;
+            Container container = Database.CreateContainerIfNotExistsAsync(containerId, PartitionKeyPath).GetAwaiter().GetResult();
+            return container.GetItemQueryStreamIterator(queryDefinition);
+        }
+
+        public async Task<object> CreateAsync(string containerId, object data)
+        {
+            Container container = await Database.CreateContainerIfNotExistsAsync(containerId, PartitionKeyPath);
+            EnsureDefaultId(data);
+            return await container.CreateItemStreamAsync(ConvertToStream(data), new PartitionKey(DefaultPartitionKey));
+        }
+
+        public async Task<object> UpdateAsync(string containerId, object data, string queryText)
+        {
+            Container container = await Database.CreateContainerIfNotExistsAsync(containerId, PartitionKeyPath);
+            // TODO: retrive existing values.
+            int effectCount = 1;
+            var result = await container.UpsertItemStreamAsync(ConvertToStream(data), new PartitionKey(DefaultPartitionKey));
+            return effectCount;
         }
     }
 }
