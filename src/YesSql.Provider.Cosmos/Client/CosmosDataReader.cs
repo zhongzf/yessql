@@ -219,7 +219,7 @@ namespace YesSql.Provider.Cosmos.Client
             return 0;
         }
 
-        private void InternalRead()
+        private bool InternalRead()
         {
             if (NextObject == null)
             {
@@ -231,16 +231,19 @@ namespace YesSql.Provider.Cosmos.Client
                 if (documents != null && documents.Count > 0 && CurrentIndex < documents.Count)
                 {
                     CurrentObject = documents[CurrentIndex];
+                    return true;
                 }
             }
+            return false;
         }
 
         public override bool Read()
         {
             try
             {
-                InternalRead();
+                bool result = InternalRead();
                 CurrentIndex++;
+                return result;
             }
             catch (Exception ex)
             {
