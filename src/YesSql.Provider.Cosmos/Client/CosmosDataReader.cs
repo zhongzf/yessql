@@ -28,6 +28,12 @@ namespace YesSql.Provider.Cosmos.Client
         public object GetObjectValue(int ordinal)
         {
             // TODO:
+            if(CurrentObject != null && CurrentObject is JObject)
+            {
+                var data = CurrentObject as JObject;
+                var jObjectReader = new JObjectReader(data);
+                return jObjectReader.GetValue(ordinal);
+            }    
             return null;
         }
 
