@@ -11,6 +11,7 @@ namespace YesSql.Provider.Cosmos.Client
 {
     public class CosmosDataReader : DbDataReader
     {
+        public const int DefaultFieldCount = 7;
         public const string DocumentsPropertyName = "Documents";
 
         public FeedIteratorReader FeedIteratorReader { get; set; }
@@ -53,11 +54,15 @@ namespace YesSql.Provider.Cosmos.Client
         {
             get
             {
+                if (CurrentObject == null)
+                {
+                    InternalRead();
+                }
                 if (CurrentObject != null && CurrentObject is JObject)
                 {
                     var data = CurrentObject as JObject;
                     var jObjectReader = new JObjectReader(data);
-                    return jObjectReader.GetProperties().Length;
+                    return jObjectReader.GetProperties().Length - DefaultFieldCount;
                 }
                 return 0;
             }
@@ -111,6 +116,10 @@ namespace YesSql.Provider.Cosmos.Client
 
         public override Type GetFieldType(int ordinal)
         {
+            if(CurrentObject == null)
+            {
+                InternalRead();
+            }
             if (CurrentObject != null && CurrentObject is JObject)
             {
                 var data = CurrentObject as JObject;
@@ -182,6 +191,10 @@ namespace YesSql.Provider.Cosmos.Client
 
         public override string GetName(int ordinal)
         {
+            if (CurrentObject == null)
+            {
+                InternalRead();
+            }
             if (CurrentObject != null && CurrentObject is JObject)
             {
                 var data = CurrentObject as JObject;
@@ -193,6 +206,10 @@ namespace YesSql.Provider.Cosmos.Client
 
         public override int GetOrdinal(string name)
         {
+            if (CurrentObject == null)
+            {
+                InternalRead();
+            }
             if (CurrentObject != null && CurrentObject is JObject)
             {
                 var data = CurrentObject as JObject;
@@ -202,23 +219,28 @@ namespace YesSql.Provider.Cosmos.Client
             return 0;
         }
 
+        private void InternalRead()
+        {
+            if (NextObject == null)
+            {
+                NextObject = FeedIteratorReader.ReadNext().GetAwaiter().GetResult();
+            }
+            if (NextObject is JObject)
+            {
+                var documents = (NextObject as JObject).GetValue(DocumentsPropertyName) as JArray;
+                if (documents != null && documents.Count > 0 && CurrentIndex < documents.Count)
+                {
+                    CurrentObject = documents[CurrentIndex];
+                }
+            }
+        }
+
         public override bool Read()
         {
             try
             {
-                if(NextObject == null)
-                {
-                    NextObject = FeedIteratorReader.ReadNext().GetAwaiter().GetResult();
-                }
-                if(NextObject is JObject)
-                {
-                    var documents = (NextObject as JObject).GetValue(DocumentsPropertyName) as JArray;
-                    if(documents != null && documents.Count > 0 && CurrentIndex < documents.Count)
-                    {
-                        CurrentObject = documents[CurrentIndex];
-                        CurrentIndex++;
-                    }
-                }
+                InternalRead();
+                CurrentIndex++;
             }
             catch (Exception ex)
             {
